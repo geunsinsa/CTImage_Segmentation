@@ -22,14 +22,14 @@ Code for those who are new to segmentation using pytorch
 - root(CTImage_Segmentation)/data/raw_dataset/labels
   - Insert dataset labels file .gz
 - root(CTImage_Segmentation)/Experiment
-4. Set parameters of train.py
+4. Set parameters of train.py : Need to know CT Characteristic and Hounsfield Scale
   ```
 if __name__ == '__main__':
     # slice data 생성
-    rawdata_path = 'data/raw_dataset/' # 원본 데이터
-    savedata_path = 'Experiment/single_spleen_dataset/' # 변환 데이터 폴더 생성 및 위치
-    huList = [[40, 60]] # hounsfield value Listist
-    organNum = [3] # Organ Number List
+    rawdata_path = './data/raw_dataset/' # original dataset path
+    savedata_path = './Experiment/single_spleen_dataset/' # Sliced Data save path
+    huList = [[40, 60]] # hounsfield value Listist 
+    organNum = [3] # Organ Number List : Show Upper Image
     sliced_dataset(rawdata_path, savedata_path, huList, organNum)
 
 
@@ -37,10 +37,9 @@ if __name__ == '__main__':
     data_path = savedata_path  # dataset path
     lr = 0.0001 # learning rate
     batch_size = 4 # train batch size, val_batch_size Fix 1
-    epochs = 2 # Epoch
-    classes = 1 + len(organNum) # bg + organ # Model Output channel
-    # model = Unet(input_channel=ch, num_class=classes) # Unet
-    model = FUSeg(input_channel=ch, num_class=classes)
+    epochs = 2 # Epochs
+    classes = 1 + len(organNum) # Background + Organ, Model Output channel
+    model = Unet(input_channel=ch, num_class=classes) # Unet
     criterion = CombinedLoss() # CombinedLoss or DiceLoss : Hard Dice Loss, loss.py
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr) # Adam, SGD, RMSprop : Select Optimizer
 
