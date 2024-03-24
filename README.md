@@ -1,6 +1,5 @@
 # CT Image Segmentation Tutorial for Beginner
-- Code for those who are new to segmentation using pytorch
-
+Code for those who are new to segmentation using pytorch
 
 ## Library Versions
 - torch : 2.2.0+cu121
@@ -9,6 +8,13 @@
 - tqdm : 4.66.2
 - numpy : 1.26.3
 - pandas : 2.2.1
+
+## Dataset Downloads
+"[Download link](http://bmvc2018.org/contents/papers/0092.pdf)"
+"[Information link](http://bmvc2018.org/contents/papers/0092.pdf)"
+
+
+
 # BAM and CBAM
 Official PyTorch code for "[BAM: Bottleneck Attention Module (BMVC2018)](http://bmvc2018.org/contents/papers/0092.pdf)" and "[CBAM: Convolutional Block Attention Module (ECCV2018)](http://openaccess.thecvf.com/content_ECCV_2018/html/Sanghyun_Woo_Convolutional_Block_Attention_ECCV_2018_paper.html)"
 
