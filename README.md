@@ -27,7 +27,7 @@ Code for those who are new to segmentation using pytorch
 if __name__ == '__main__':
     # slice data 생성
     rawdata_path = './data/raw_dataset/' # original dataset path
-    savedata_path = './Experiment/single_spleen_dataset/' # Sliced Data save path
+    savedata_path = './Experiment/single_spleen_dataset/' # Sliced Data save path : All results are saved on the path you've designated
     huList = [[40, 60]] # hounsfield value Listist 
     organNum = [3] # Organ Number List : Show Upper Image
     sliced_dataset(rawdata_path, savedata_path, huList, organNum)
