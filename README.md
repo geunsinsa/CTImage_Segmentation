@@ -17,11 +17,11 @@ Code for those who are new to segmentation using pytorch
 1. Download dataset -> decompression
 2. Download code.zip -> decompression
 3. Generator Folder
-- root(CTImage_Segmentation)/data/raw_dataset/images
+- CTImage_Segmentation-main/data/raw_dataset/images
   - Insert dataset images file .gz
-- root(CTImage_Segmentation)/data/raw_dataset/labels
+- CTImage_Segmentation-main/data/raw_dataset/labels
   - Insert dataset labels file .gz
-- root(CTImage_Segmentation)/Experiment
+- CTImage_Segmentation-main/Experiment
 4. Set parameters of train.py : Need to know CT Characteristic and Hounsfield Scale
   ```
 if __name__ == '__main__':
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     batch_size = 4 # train batch size, val_batch_size Fix 1
     epochs = 2 # Epochs
     classes = 1 + len(organNum) # Background + Organ, Model Output channel
-    model = Unet(input_channel=ch, num_class=classes) # Unet
+    model = Unet(input_channel=ch, num_class=classes) # unet_model.py & segnet_model.py
     criterion = CombinedLoss() # CombinedLoss or DiceLoss : Hard Dice Loss, loss.py
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr) # Adam, SGD, RMSprop : Select Optimizer
 
