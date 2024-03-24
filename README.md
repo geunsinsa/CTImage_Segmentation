@@ -13,7 +13,16 @@ Code for those who are new to segmentation using pytorch
 - Download [link](https://zenodo.org/records/7860267)
 ![initial](https://rumc-gcorg-p-public.s3.amazonaws.com/i/2022/03/29/20220309-FLARE22-Pictures-2.png)
 
-
+## Train Method
+1. Download dataset -> decompression
+2. Download code.zip -> decompression
+3. Generator Folder
+  - root(CTImage_Segmentation)/data/raw_dataset/images
+    - Insert dataset images file .gz
+  - root(CTImage_Segmentation)/data/raw_dataset/labels
+    - Insert dataset labels file .gz
+  - root(CTImage_Segmentation)/Experiment
+4. Set parameters of train.py
 
 # BAM and CBAM
 Official PyTorch code for "[BAM: Bottleneck Attention Module (BMVC2018)](http://bmvc2018.org/contents/papers/0092.pdf)" and "[CBAM: Convolutional Block Attention Module (ECCV2018)](http://openaccess.thecvf.com/content_ECCV_2018/html/Sanghyun_Woo_Convolutional_Block_Attention_ECCV_2018_paper.html)"
