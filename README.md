@@ -11,7 +11,7 @@ Code for those who are new to segmentation using pytorch
 
 ## Dataset
 - Download [link](https://zenodo.org/records/7860267)
-- Information [link](https://flare22.grand-challenge.org/Home/)
+- Information [link](https://flare22.grand-challenge.org/)
 
 
 
