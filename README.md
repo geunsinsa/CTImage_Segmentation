@@ -10,8 +10,8 @@ Code for those who are new to segmentation using pytorch
 - pandas : 2.2.1
 
 ## Dataset Downloads
-"[Download link](http://bmvc2018.org/contents/papers/0092.pdf)"
-"[Information link](http://bmvc2018.org/contents/papers/0092.pdf)"
+- [Download link](http://bmvc2018.org/contents/papers/0092.pdf)
+- [Information link](http://bmvc2018.org/contents/papers/0092.pdf)
 
 
 
