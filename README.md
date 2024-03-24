@@ -9,9 +9,9 @@ Code for those who are new to segmentation using pytorch
 - numpy : 1.26.3
 - pandas : 2.2.1
 
-## Dataset Downloads
-- [Download link](http://bmvc2018.org/contents/papers/0092.pdf)
-- [Information link](http://bmvc2018.org/contents/papers/0092.pdf)
+## Dataset
+- Download [link](https://zenodo.org/records/7860267)
+- Information [link](https://flare22.grand-challenge.org/Home/)
 
 
 
