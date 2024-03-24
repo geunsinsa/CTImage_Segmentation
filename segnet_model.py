@@ -72,7 +72,7 @@ class SegNet(nn.Module):
         self.decoded3 = Conv3(num_filter[2], num_filter[1], phase='decode')
         self.decoded2 = Conv2(num_filter[1], num_filter[0], phase='decode')
         self.decoded1 = Conv2(num_filter[0], num_class, phase='decode')
-        self.final = nn.Conv2d(num_classes, num_class, kernel_size=3, stride=1, padding=1, bias=False)
+        self.final = nn.Conv2d(num_class, num_class, kernel_size=3, stride=1, padding=1, bias=False)
 
         # initialise weigths
         for m in self.modules():
