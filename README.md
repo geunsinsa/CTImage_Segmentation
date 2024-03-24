@@ -17,11 +17,11 @@ Code for those who are new to segmentation using pytorch
 1. Download dataset -> decompression
 2. Download code.zip -> decompression
 3. Generator Folder
-  - root(CTImage_Segmentation)/data/raw_dataset/images
-    - Insert dataset images file .gz
-  - root(CTImage_Segmentation)/data/raw_dataset/labels
-    - Insert dataset labels file .gz
-  - root(CTImage_Segmentation)/Experiment
+- root(CTImage_Segmentation)/data/raw_dataset/images
+  - Insert dataset images file .gz
+- root(CTImage_Segmentation)/data/raw_dataset/labels
+  - Insert dataset labels file .gz
+- root(CTImage_Segmentation)/Experiment
 4. Set parameters of train.py
 
 # BAM and CBAM
