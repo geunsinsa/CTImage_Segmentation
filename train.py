@@ -15,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 from make_slicing_dataset import sliced_dataset
 from loss import CombinedLoss, DiceLoss
 from unet_model import Unet
-from fuseg_model import FUSeg
+from segnet_model import SegNet
 def make_result_folder(path):
     folder_name = ['model','Loss','result','csvLogger']
     for name in folder_name:
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     epochs = 2 # Epoch
     classes = 1 + len(organNum) # bg + organ # Model Output channel
     # model = Unet(input_channel=ch, num_class=classes) # Unet
-    model = FUSeg(input_channel=ch, num_class=classes)
+    model = SegNet(input_channel=ch, num_class=classes)
     criterion = CombinedLoss() # CombinedLoss or DiceLoss : Hard Dice Loss, loss.py
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr) # Adam, SGD, RMSprop : Select Optimizer
 
