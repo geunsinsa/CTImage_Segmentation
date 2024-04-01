@@ -25,8 +25,8 @@ def make_result_folder(path):
 
 def load_dataset(path, train_num=40):
     numPatientCT = np.load(f'{path}/concat_idx.npz')['data']
-    concatCT_IMG = ((np.load(f'{path}/concat_images.npz')['data']).astype(np.float16) / 255.0)
-    concatCT_LBL = np.load(f'{path}/concat_labels.npz')['data'].astype(np.float16)
+    concatCT_IMG = ((np.load(f'{path}/concat_images.npz')['data']).astype(np.float32) / 255.0)
+    concatCT_LBL = np.load(f'{path}/concat_labels.npz')['data'].astype(np.float32)
 
     divide_idx = sum(numPatientCT[:train_num])
     trainImage = np.transpose(concatCT_IMG[:divide_idx, :, :],(0,2,3,1))
