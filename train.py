@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-
+import cv2
+import argparse
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -13,9 +14,9 @@ import torch.cuda.amp as amp
 from torch.utils.tensorboard import SummaryWriter
 
 from make_slicing_dataset import sliced_dataset
-from loss import CombinedLoss, DiceLoss
+from loss import CombinedLoss
 from unet_model import Unet
-from segnet_model import SegNet
+
 def make_result_folder(path):
     folder_name = ['model','Loss','result','csvLogger']
     for name in folder_name:
@@ -23,6 +24,33 @@ def make_result_folder(path):
       if not os.path.exists(folder_path):
           os.makedirs(folder_path)
 
+def morphological_bg_fg_nii(imgPath):
+    data = np.load(imgPath)['data']
+    # 각 slice를 모폴로지 연산을 적용하여 전경과 배경 추출 후 NumPy 배열로 변환
+    result_slices = []
+    for slice_idx in range(data.shape[0]):
+        # 이미지 추출
+        image = data[slice_idx]
+        result = []
+        for ch in range(image.shape[0]):
+            # 이진화 수행
+            _, binary_image = cv2.threshold(image[ch].astype(np.uint8), 70, 255, cv2.THRESH_BINARY)
+
+            # 모폴로지 연산 수행
+            kernel = np.ones((5, 5), np.uint8)
+            closing = cv2.morphologyEx(binary_image, cv2.MORPH_OPEN, kernel)
+
+            # 전경과 배경 추출
+            foreground = cv2.bitwise_and(image[ch], image[ch], mask=closing)
+            result.append(foreground)
+        fg_ch_images = np.stack(result)
+        # 결과 추가
+        result_slices.append(fg_ch_images)
+
+    # 모든 slice를 하나의 NumPy 배열로 병합
+    foreground_images = np.stack(result_slices)
+    print("전경/배경 분리 완료 ...")
+    return foreground_images
 def load_dataset(path, train_num=40):
     numPatientCT = np.load(f'{path}/concat_idx.npz')['data']
     concatCT_IMG = ((np.load(f'{path}/concat_images.npz')['data']).astype(np.float32) / 255.0)
@@ -31,7 +59,8 @@ def load_dataset(path, train_num=40):
     divide_idx = sum(numPatientCT[:train_num])
     trainImage = np.transpose(concatCT_IMG[:divide_idx, :, :],(0,2,3,1))
     trainLabel = np.transpose(concatCT_LBL[:divide_idx, :, :],(0,2,3,1))
-
+    if trainImage.shape[-1] > 1:
+        trainLabel = np.tile(trainLabel, (1, 1, 1, trainImage.shape[-1]))
     valImage = np.transpose(concatCT_IMG[divide_idx:, :, :],(0,2,3,1))
     valLabel = np.transpose(concatCT_LBL[divide_idx:, :, :],(0,2,3,1))
 
@@ -48,7 +77,7 @@ def metrics_table(train_loss, val_loss, metrics, path):
                              'Val_IOU_Coefficient': val_iou}, index=range(1, len(train_dice_coef) + 1))
 
     loggerDF.to_csv(
-        f'{path}/csvLogger/logger_{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}.csv')
+        f'{path}/csvLogger/logger_{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}_Aug_{aug}.csv')
 
 def loss_plot(train_loss, val_loss, path):
     plt.figure(figsize=(7, 7))
@@ -57,7 +86,7 @@ def loss_plot(train_loss, val_loss, path):
     plt.title(f'{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}')
     plt.ylim(0, 1)
     plt.legend()
-    plt.savefig(f'{path}/Loss/{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}.png')
+    plt.savefig(f'{path}/Loss/{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}_Aug_{aug}.png')
 
 def dice_coef_plot(train_dice_coef, val_dice_coef, path):
     plt.figure(figsize=(7, 7))
@@ -66,7 +95,7 @@ def dice_coef_plot(train_dice_coef, val_dice_coef, path):
     plt.title(f'{type(model).__name__} Dice Coefficient')
     plt.ylim(0, 1)
     plt.legend()
-    plt.savefig(f'{path}/Loss/{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}_DiceCoef.png')
+    plt.savefig(f'{path}/Loss/{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}_DiceCoef_Aug_{aug}.png')
 
 def iou_plot(train_iou_coef, val_iou_coef, path):
     plt.figure(figsize=(7, 7))
@@ -75,7 +104,7 @@ def iou_plot(train_iou_coef, val_iou_coef, path):
     plt.title(f'{type(model).__name__} IOU')
     plt.ylim(0, 1)
     plt.legend()
-    plt.savefig(f'{path}/Loss/{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}_IOU.png')
+    plt.savefig(f'{path}/Loss/{type(model).__name__}_{type(optimizer).__name__}_{type(criterion).__name__}_IOU_Aug_{aug}.png')
 
 def validation(model, criterion, val_loader, device):
     model.eval()
@@ -108,18 +137,18 @@ def validation(model, criterion, val_loader, device):
 
     return _val_loss, _val_dice_coef, _val_iou
 
-def train(path, batch_size, classes, epochs, model, criterion, optimizer):
+def train(path, batch_size, classes, epochs, model, criterion, optimizer, aug):
     make_result_folder(path) # fn
-    trainImage, trainLabel, valImage, valLabel = load_dataset(path) # fn
+    trainImage, trainLabel, valImage, valLabel = load_dataset(path)
 
     transform = transforms.Compose([
         transforms.ToTensor()
     ])
 
-    train_dataset = CustomDataset(trainImage, trainLabel, transform=transform, num_classes=classes) # dataset.py
+    train_dataset = CustomDataset(trainImage, trainLabel, transform=transform, num_classes=classes, augmentation=aug, phase='train')
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-    val_dataset = CustomDataset(valImage, valLabel, transform=transform, num_classes=classes)
+    val_dataset = CustomDataset(valImage, valLabel, transform=transform, num_classes=classes, augmentation=aug, phase='val')
     val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -137,7 +166,7 @@ def train(path, batch_size, classes, epochs, model, criterion, optimizer):
     train_iou_logger = []
     val_iou_logger = []
 
-    writer = SummaryWriter(log_dir=f"{data_path}/Log_Dir/")
+    writer = SummaryWriter(log_dir=f"{path}/Log_Dir/")
     for epoch in range(1, epochs + 1):
         model.train()
 
@@ -197,13 +226,13 @@ def train(path, batch_size, classes, epochs, model, criterion, optimizer):
             print(best_val_loss)
             best_model_wts = copy.deepcopy(model.state_dict())
             torch.save(best_model_wts,
-                       f'{path}/model/{type(model).__name__}_bestest_model_{type(optimizer).__name__}_{type(criterion).__name__}.pt')
+                       f'{path}/model/{type(model).__name__}_bestest_model_{type(optimizer).__name__}_{type(criterion).__name__}_Aug_{aug}.pt')
 
     else:
         writer.flush()
         writer.close()
         torch.save(model.state_dict(),
-                   f'{path}/model/{type(model).__name__}_latest_model_{type(optimizer).__name__}_{type(criterion).__name__}.pt')
+                   f'{path}/model/{type(model).__name__}_latest_model_{type(optimizer).__name__}_{type(criterion).__name__}_Aug_{aug}.pt')
 
         return [model.state_dict(), best_model_wts, train_loss_logger, val_loss_logger, [train_dice_coef_logger,
                                                                                         val_dice_coef_logger,
@@ -213,34 +242,42 @@ def train(path, batch_size, classes, epochs, model, criterion, optimizer):
 
 
 
-
-
-if __name__ == '__main__':
+def main(args):
     # slice data 생성
-    rawdata_path = 'data/raw_dataset/' # 원본 데이터
-    savedata_path = 'Experiment/single_spleen_dataset/' # 변환 데이터 폴더 생성 및 위치
-    huList = [[40, 60]] # hounsfield value Listist
-    organNum = [3] # Organ Number List
+    rawdata_path = 'data/raw_dataset/'  # 원본 데이터
+    savedata_path = args.savedata_path  # 변환 데이터 폴더 생성 및 위치
+    huList = [[-260,240]]  # hounsfield value List
+    organNum = [int(x) for x in args.organNum.split(',')]  # Organ Number List
     sliced_dataset(rawdata_path, savedata_path, huList, organNum)
 
-
-    ch = len(huList) # the number of channels
+    ch = len(huList)  # the number of channels
     data_path = savedata_path  # dataset path
-    lr = 0.0001 # learning rate
-    batch_size = 4 # train batch size, val_batch_size Fix 1
-    epochs = 2 # Epoch
-    classes = 1 + len(organNum) # bg + organ # Model Output channel
-    # model = Unet(input_channel=ch, num_class=classes) # Unet
-    model = SegNet(input_channel=ch, num_class=classes)
-    criterion = CombinedLoss() # CombinedLoss or DiceLoss : Hard Dice Loss, loss.py
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr) # Adam, SGD, RMSprop : Select Optimizer
+    aug = args.aug  # Train Data Augmentation
+    lr = args.lr  # learning rate
+    batch_size = args.batch_size  # train batch size, val_batch_size Fix 1
+    epochs = args.epochs  # Epoch
+    classes = 1 + len(organNum)
+    model = Unet(input_channel=ch, num_class=classes)  # Unet
 
+    criterion = CombinedLoss()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
-    # Tensorboadrd 사용 가능 train함수 안에 경로 지정
-    result = train(path=data_path, batch_size=batch_size, classes=classes, epochs=epochs, model=model, criterion=criterion, optimizer=optimizer)
+    # Tensorboard 사용 가능 train함수 안에 경로 지정
+    result = train(path=data_path, batch_size=batch_size, classes=classes, epochs=epochs, model=model, criterion=criterion, optimizer=optimizer, aug=aug)
     last_model_wts, best_model_wts, train_loss_logger, val_loss_logger, metrics = result
-    metrics_table(train_loss_logger, val_loss_logger, metrics, data_path) # save loss logger
-    loss_plot(train_loss_logger, val_loss_logger, data_path) #
+    metrics_table(train_loss_logger, val_loss_logger, metrics, data_path)  # save loss logger
+    loss_plot(train_loss_logger, val_loss_logger, data_path)  #
     dice_coef_plot(metrics[0], metrics[1], data_path)
-    iou_plot(metrics[2], metrics[3],data_path)
+    iou_plot(metrics[2], metrics[3], data_path)
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Training script for Unet model.')
+    parser.add_argument('--savedata_path', type=str, required=True, help='변환 데이터 폴더 생성 및 위치')
+    parser.add_argument('--organNum', type=str, required=True, help='Organ Number List, 쉼표로 구분된 문자열로 입력')
+    parser.add_argument('--aug', action='store_true', help='Train Data Augmentation')
+    parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
+    parser.add_argument('--batch_size', type=int, default=4, help='Train batch size, val_batch_size Fix 1')
+    parser.add_argument('--epochs', type=int, default=100, help='Number of epochs')
+
+    args = parser.parse_args()
+    main(args)
