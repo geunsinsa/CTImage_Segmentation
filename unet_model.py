@@ -41,7 +41,7 @@ class Unet(nn.Module):
         self.decoded2 = Conv(num_filter[2] + num_filter[1], num_filter[1])
         self.decoded1 = Conv(num_filter[1] + num_filter[0], num_filter[0])
 
-        self.final = nn.Conv2d(num_filter[0], num_class, kernel_size=3, stride=1, padding=1)
+        self.final = nn.Conv2d(num_filter[0], num_class, kernel_size=1)
 
         # initialise weigths
         for m in self.modules():
