@@ -244,7 +244,7 @@ def train(path, batch_size, classes, epochs, model, criterion, optimizer, aug):
 
 def main(args):
     # slice data 생성
-    rawdata_path = 'data/raw_dataset/'  # 원본 데이터
+    rawdata_path = 'data/FLARE22Train/'  # 원본 데이터
     savedata_path = args.savedata_path  # 변환 데이터 폴더 생성 및 위치
     huList = [[-260,240]]  # hounsfield value List
     organNum = [int(x) for x in args.organNum.split(',')]  # Organ Number List
