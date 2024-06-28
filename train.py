@@ -274,7 +274,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training script for Unet model.')
     parser.add_argument('--savedata_path', type=str, required=True, help='변환 데이터 폴더 생성 및 위치')
     parser.add_argument('--organNum', type=str, required=True, help='Organ Number List, 쉼표로 구분된 문자열로 입력')
-    parser.add_argument('--aug', type=boolean, help='Train Data Augmentation')
+    parser.add_argument('--aug', action='store_true', help='Train Data Augmentation')
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
     parser.add_argument('--batch_size', type=int, default=4, help='Train batch size, val_batch_size Fix 1')
     parser.add_argument('--epochs', type=int, default=100, help='Number of epochs')
